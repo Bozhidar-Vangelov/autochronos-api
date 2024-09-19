@@ -2,10 +2,6 @@
 
 namespace AutoChronos.API.Models
 {
-    public class User : IdentityUser
-    {
+    public class User : IdentityUser { }
 
-        public required string FirstName { get; set; }
-        public required string LastName { get; set; }
-    }
 }
