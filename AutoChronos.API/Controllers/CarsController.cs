@@ -1,83 +1,84 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using AutoChronos.API.Data;
 using AutoChronos.API.Models;
 using Microsoft.AspNetCore.Authorization;
+using AutoChronos.API.Services;
 
 namespace AutoChronos.API.Controllers
 {
     [Authorize]
     [ApiController]
     [Route("api/cars")]
-    public class CarsController(ApplicationDbContext context) : ControllerBase
+    public class CarsController(CarsService carsService) : ControllerBase
     {
+
+        private string? GetUserId()
+        {
+            return User.FindFirstValue(ClaimTypes.NameIdentifier);
+        }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Car>>> GetCars()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return await context.Cars.Where(c => c.UserId == userId).ToListAsync();
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
+            var cars = await carsService.GetAllCarsAsync(userId);  
+            var carDtos = cars.Select(c => carsService.MapCarToDto(c)).ToList();
+
+            return Ok(carDtos);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Car>> GetCar(int id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var car = await context.Cars.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User is not authenticated.");
+            }
+
+            var car = await carsService.GetCarByIdAsync(id, userId);
 
             if (car == null)
             {
                 return NotFound();
             }
 
-            return car;
+            var carDto = carsService.MapCarToDto(car);
+            return Ok(carDto);
         }
 
         [HttpPost]
         public async Task<ActionResult<Car>> AddCar(Car car)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (userId == null)
-            {
-                return Unauthorized();
-            }
-
+            var userId = GetUserId();
             car.UserId = userId;
 
-            context.Cars.Add(car);
-            await context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetCar), new { id = car.Id }, car);
+            var createdCar = await carsService.CreateCarAsync(car);
+            return CreatedAtAction(nameof(GetCar), new { id = createdCar.Id }, createdCar);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCar(int id, Car car)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userId = GetUserId();
 
             if (id != car.Id || car.UserId != userId)
             {
-                return BadRequest();
+                return BadRequest("Car ID mismatch.");
             }
 
-            context.Entry(car).State = EntityState.Modified;
+            car.UserId = userId;
 
-            try
+            var updatedCar = await carsService.UpdateCarAsync(car);
+
+            if (updatedCar == null)
             {
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CarExists(id, userId!))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return NotFound("Car not found.");
             }
 
             return NoContent(); 
@@ -86,22 +87,20 @@ namespace AutoChronos.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCar(int id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var car = await context.Cars.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
-
-            if (car == null)
+            var userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
             {
-                return NotFound();
+                return Unauthorized("User is not authenticated.");
             }
 
-            context.Cars.Remove(car);
-            await context.SaveChangesAsync();
+            var deletedCar = await carsService.DeleteCarAsync(id, userId);
+
+            if (!deletedCar)
+            {
+                return NotFound("Car not found.");
+            }
 
             return NoContent();
-        }
-        private bool CarExists(int id, string userId)
-        {
-            return context.Cars.Any(e => e.Id == id && e.UserId == userId);
         }
     }
 }
