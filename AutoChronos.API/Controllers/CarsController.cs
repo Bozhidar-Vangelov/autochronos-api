@@ -57,11 +57,6 @@ namespace AutoChronos.API.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            Console.WriteLine("userId");
-            Console.WriteLine(userId);
-            Console.WriteLine("car.UserId");
-            Console.WriteLine(car.UserId);
-
             if (id != car.Id || car.UserId != userId)
             {
                 return BadRequest();
