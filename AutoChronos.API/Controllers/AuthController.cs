@@ -91,6 +91,7 @@ namespace AutoChronos.API.Controllers
             var authClaims = new List<Claim>
             {
                 new(ClaimTypes.Name, user.UserName ?? string.Empty),
+                new(ClaimTypes.NameIdentifier, user.Id),
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
