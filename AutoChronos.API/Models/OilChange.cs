@@ -7,7 +7,7 @@
         public int CurrentKilometers { get; set; }
         public List<string>? FiltersChanged { get; set; }
         public int CarId { get; set; }
-        public required Car Car { get; set; }
+        public Car? Car { get; set; }
     }
 
 }

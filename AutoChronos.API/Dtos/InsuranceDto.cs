@@ -1,13 +1,11 @@
-﻿namespace AutoChronos.API.Models
+﻿namespace AutoChronos.API.Dtos
 {
-    public class Insurance
+    public class InsuranceDto
     {
         public int Id { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime ExpirationDate { get; set; }
         public required string InsuranceCompany { get; set; }
-        public int CarId { get; set; }
-        public Car? Car { get; set; }
     }
 
 }
