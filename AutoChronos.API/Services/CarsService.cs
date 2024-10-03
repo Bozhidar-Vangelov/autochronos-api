@@ -13,6 +13,7 @@ namespace AutoChronos.API.Services
                 .Include(c => c.Insurances)
                 .Include(c => c.TechnicalReviews)
                 .Include(c => c.Vignettes)
+                .Include(c => c.OilChanges)
                 .Where(c => c.UserId == userId)
                 .ToListAsync();
         }
@@ -23,6 +24,7 @@ namespace AutoChronos.API.Services
                 .Include(c => c.Insurances)
                 .Include(c => c.TechnicalReviews)
                 .Include(c => c.Vignettes)
+                .Include(c => c.OilChanges)
                 .FirstOrDefaultAsync(c => c.Id == carId && c.UserId == userId);
         }
 
@@ -109,6 +111,15 @@ namespace AutoChronos.API.Services
                 }
             }
 
+            if (car.OilChanges != null && car.OilChanges.Count > 0)
+            {
+                foreach (var oilChange in car.OilChanges)
+                {
+                    oilChange.CarId = car.Id;
+                    context.OilChanges.Add(oilChange);
+                }
+            }
+
             await context.SaveChangesAsync();
             return existingCar;
         }
@@ -119,11 +130,12 @@ namespace AutoChronos.API.Services
                 .Include(c => c.Insurances)
                 .Include(c => c.TechnicalReviews)
                 .Include(c => c.Vignettes)
+                .Include(c => c.OilChanges)
                 .FirstOrDefaultAsync(c => c.Id == carId && c.UserId == userId);
 
             if (car == null)
             {
-                return false; // Car not found
+                return false;
             }
 
             context.Cars.Remove(car);
@@ -158,6 +170,13 @@ namespace AutoChronos.API.Services
                     StartDate = v.StartDate,
                     ExpirationDate = v.ExpirationDate,
                     VignetteType = v.VignetteType
+                }).ToList(),
+                OilChanges = car.OilChanges?.Select(oc => new OilChangeDto
+                {
+                    Id = oc.Id,
+                    ChangeDate = oc.ChangeDate,
+                    CurrentKilometers = oc.CurrentKilometers,
+                    FiltersChanged = oc.FiltersChanged
                 }).ToList()
             };
         }

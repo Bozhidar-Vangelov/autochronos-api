@@ -59,7 +59,8 @@ namespace AutoChronos.API.Controllers
             car.UserId = userId;
 
             var createdCar = await carsService.CreateCarAsync(car);
-            return CreatedAtAction(nameof(GetCar), new { id = createdCar.Id }, createdCar);
+            var createdCarDto = carsService.MapCarToDto(createdCar);
+            return CreatedAtAction(nameof(GetCar), new { id = createdCar.Id }, createdCarDto);
         }
 
         [HttpPut("{id}")]
