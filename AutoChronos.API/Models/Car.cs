@@ -12,5 +12,6 @@
         public ICollection<Insurance>? Insurances { get; set; }
         public ICollection<TechnicalReview>? TechnicalReviews { get; set; }
         public ICollection<Vignette>? Vignettes { get; set; }
+        public ICollection<OilChange>? OilChanges { get; set; }
     }
 }
