@@ -9,6 +9,7 @@
         public List<InsuranceDto>? Insurances { get; set; }
         public List<TechnicalReviewDto>? TechnicalReviews { get; set; }
         public List<VignetteDto>? Vignettes { get; set; }
+        public List<OilChangeDto>? OilChanges { get; set; }
     }
 
 }
